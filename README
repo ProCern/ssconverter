@@ -1,0 +1,17 @@
+SSConverter is a Perl project for converting CSV files to XLS files
+
+-------------------------------------------------------------------------
+Installation
+-------------------------------------------------------------------------
+1.  perl -MCPAN -e shell
+    cpan> install Spreadsheet::WriteExcel
+    cpan> install Excel::Writer::XLSX
+2.  git clone git@github.com/absperf/ssconverter
+3.  cd ssconverter
+4.  cp ssconverter.pl /usr/local/bin
+5.  put it in cron
+    * * * * * /usr/local/bin/ssconverter.pl /dir_to_watch /dir_to_write
+
+-------------------------------------------------------------------------
+Usage
+-------------------------------------------------------------------------
