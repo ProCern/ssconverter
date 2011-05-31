@@ -32,12 +32,28 @@ while ( <INF> ) {
   s/\r//; # deal with pesky \r\n from windows
   chomp($_);
   my $bareline = $_;
-  my @line = split(/,/,$bareline);
+  my @line;
+  if ( scalar( () = $bareline =~ /\t/g ) > 2 ) {
+    @line = split(/\t/,$bareline);
+    if ($DEBUG) { print "Selected TSV format\n"; }
+  }
+  elsif ( scalar( () = $bareline =~ /,/g ) > 2 ) {
+    @line = split(/,/,$bareline);
+    if ($DEBUG) { print "Selected CSV format\n"; }
+  }
+  else {
+    print STDERR "line not formatted as csv or tsv: $bareline\n";
+  }
   if ($l == 0 ) {
     $cols = $#line;
     for my $i (0..$#line) {
       $width[$i] = length($line[$i]);
-      $header[$i] = $line[$i];
+      if ( $line[$i] =~ /^"(.*)"$/ ) {
+        $header[$i] = $1;
+      }
+      else{
+        $header[$i] = $line[$i];
+      }
       if ($DEBUG) {print "set header[$i] = $line[$i] width: $width[$i]\n";}
     }
   }
