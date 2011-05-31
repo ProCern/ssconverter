@@ -1,5 +1,10 @@
 #!/usr/bin/perl
 
+#use strict;
+use Spreadsheet::WriteExcel;
+
+my $DEBUG = 0;
+
 if ( $#ARGV < 1 || $ARGV[0] =~ /^\-h$/ ) {
   print "Usage:\n";
   print "ssconverter.pl <inputfile.csv> <outputfile.xls>\n";
@@ -23,17 +28,21 @@ my $cols=0;
 
 # Parse the incoming file
 while ( <INF> ) {
-  print "$l\n";
-  chomp;
+  if ($DEBUG) {print "$l:\n";}
+  s/\r//; # deal with pesky \r\n from windows
+  chomp($_);
   my $bareline = $_;
-  my @line = split(/,/);
-  $cols = $#line;
-  foreach $i (0..@line) {
-    if ($l == 0) { # processing the header line
+  my @line = split(/,/,$bareline);
+  if ($l == 0 ) {
+    $cols = $#line;
+    for my $i (0..$#line) {
       $width[$i] = length($line[$i]);
       $header[$i] = $line[$i];
+      if ($DEBUG) {print "set header[$i] = $line[$i] width: $width[$i]\n";}
     }
-    else {
+  }
+  else {
+    for my $i (0..$#line) {
       # check for delimiter / parsing error
       if ( $#line != $cols ) {
         print STDERR "Error: parsing problem - number of cols does not matcher header on line: $bareline\n";
@@ -56,18 +65,44 @@ while ( <INF> ) {
 close(INF);
 
 # Setup the spreadsheet, write header and column widths
+if ($DEBUG) {print "########################\n";}
 
-for $i (0..$#header) {
-  print "$header[$i]:$width[$i] "
+my $workbook = Spreadsheet::WriteExcel->new($OUTFILE);
+my $worksheet = $workbook->add_worksheet();
+my $strfmt = $workbook->add_format(num_format => '@');
+
+for my $i (0..$#header) {
+  if ($DEBUG) {print "$header[$i]:$width[$i] ";}
+  if ( $header[$i] =~ /acct_no/i ) {
+    if ($DEBUG) {print " in special header\n";}
+    $worksheet->set_column($i,$i,int($width[$i]*1.2),$strfmt);
+  }
+  else {
+    $worksheet->set_column($i,$i,int($width[$i]*1.2));
+  }
+  $worksheet->write_string(0,$i,$header[$i]);
 }
-print "\n";
+
+if ($DEBUG) {print "\n";}
+
+
 
 # Write the data to the spreadsheet
 
 foreach $row (0..@content) {
-  print "$row:\n";
+  if ($DEBUG) {print "$row:\n";}
   foreach $col (0..@{$content[$row]}) {
-    print "$col: $content[$row][$col] ";
+    if ($DEBUG) {print "$col: $content[$row][$col] ";}
+    if ( $content[$row][$col] =~ /\d{10}/ ) {
+      $worksheet->write_string($row+1,$col,$content[$row][$col]);
+    }
+    elsif ( $content[$row][$col] =~ /^$/ ) {
+      if ($DEBUG) {print " in blank handller\n";}
+      #$worksheet->write_blank($row,$col);
+    }
+    else {
+      $worksheet->write($row+1,$col,$content[$row][$col]);
+    }
   }
-  print "\n\n";
+  if ($DEBUG) {print "\n\n";}
 }
