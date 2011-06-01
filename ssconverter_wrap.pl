@@ -16,4 +16,11 @@ $STO = basename($FULL_TO);
 system("cp $FULL_FROM $WORKDIR_LOCAL/$SFROM");
 
 # run the remote conversion utility
-system("ssh faxserver /usr/local/bin/ssconverter.pl $WORKDIR_REMOTE/$SFROM $WORKDIR_REMOTE/$STO")
+system("ssh faxserver /usr/local/bin/ssconverter.pl $WORKDIR_REMOTE/$SFROM $WORKDIR_REMOTE/$STO");
+
+# put the final file in the desired location
+system("cp $WORKDIR_LOCAL/$STO $FULL_TO");
+
+# clean up the temp files on the share
+system("rm $WORKDIR_LOCAL/$SFROM");
+system("rm $WORKDIR_LOCAL/$STO");
