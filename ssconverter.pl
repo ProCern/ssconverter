@@ -2,8 +2,10 @@
 
 #use strict;
 use Spreadsheet::WriteExcel;
+use POSIX qw/strftime/;
 
 my $DEBUG = 0;
+my $LOGFILE = '/var/log/ssconverter/ssconverter.log';
 
 if ( $#ARGV < 1 || $ARGV[0] =~ /^\-h$/ ) {
   print "Usage:\n";
@@ -14,10 +16,11 @@ if ( $#ARGV < 1 || $ARGV[0] =~ /^\-h$/ ) {
 else {
   $INFILE = $ARGV[0];
   $OUTFILE = $ARGV[1];
+  logger('INFO',"Conversion started for $INFILE to $OUTFILE");
 }
 
 unless (open INF, "<$INFILE" ) {
-  die "Error: cannot open file $INFILE\n";
+  logger('FATAL',"Error: cannot open file $INFILE\n");
 }
 
 my $l = 0;
@@ -46,7 +49,7 @@ while ( <INF> ) {
     if ($DEBUG) { print "Selected CSV format\n"; }
   }
   else {
-    print STDERR "line not formatted as csv or tsv: $bareline\n";
+    logger('ERROR', "line in $INFILE not formatted as csv or tsv: $bareline\n");
   }
   # Loop through all of the elements and remove all " characters
   for my $i (0..$#line) {
@@ -62,7 +65,7 @@ while ( <INF> ) {
   }
   else { # handle the body/data
     if ( $#line != $cols ) {
-      print STDERR "Error: parsing problem - number of cols does not matcher header on line: $bareline\n";
+      logger('ERROR', "Error: parsing problem in file $INFILE: number of cols does not matcher header on line: $bareline\n");
       next;
     }
     for my $i (0..$#line) {
@@ -120,3 +123,15 @@ foreach $row (0..@content) {
   }
   if ($DEBUG) {print "\n\n";}
 }
+
+sub logger () {
+  unless (open LOG, ">>$LOGFILE" ) {
+    die "Error: cannot open log file $LOGFILE $!\n";
+  }
+  if ( $#_ != 1 ) { 
+    logger('ERROR','logger function called with incorrect args.');
+  }
+  print LOG strftime('%D %T',localtime) . ":$_[0]:$_[1]\n";
+  if ( $_[0] =~ /FATAL/ ) { exit; }
+}
+
