@@ -37,6 +37,10 @@ while ( <INF> ) {
     @line = split(/\t/,$bareline);
     if ($DEBUG) { print "Selected TSV format\n"; }
   }
+  elsif ( scalar( () = $bareline =~ /\",\"/g ) > 2 ) {
+    @line = split(/\",\"/,$bareline);
+    if ($DEBUG) { print "Selected Quote Enclosed CSV format\n"; }
+  }
   elsif ( scalar( () = $bareline =~ /,/g ) > 2 ) {
     @line = split(/,/,$bareline);
     if ($DEBUG) { print "Selected CSV format\n"; }
@@ -44,36 +48,30 @@ while ( <INF> ) {
   else {
     print STDERR "line not formatted as csv or tsv: $bareline\n";
   }
-  if ($l == 0 ) {
+  # Loop through all of the elements and remove all " characters
+  for my $i (0..$#line) {
+    $line[$i] =~ s/\"//g;
+  }
+  if ($l == 0 ) { # handle the header differently than the body
     $cols = $#line;
     for my $i (0..$#line) {
       $width[$i] = length($line[$i]);
-      if ( $line[$i] =~ /^"(.*)"$/ ) {
-        $header[$i] = $1;
-      }
-      else{
-        $header[$i] = $line[$i];
-      }
+      $header[$i] = $line[$i];
       if ($DEBUG) {print "set header[$i] = $line[$i] width: $width[$i]\n";}
     }
   }
-  else {
+  else { # handle the body/data
+    if ( $#line != $cols ) {
+      print STDERR "Error: parsing problem - number of cols does not matcher header on line: $bareline\n";
+      next;
+    }
     for my $i (0..$#line) {
       # check for delimiter / parsing error
-      if ( $#line != $cols ) {
-        print STDERR "Error: parsing problem - number of cols does not matcher header on line: $bareline\n";
-        next;
-      }
       # ensure the width is the widest width
       if ( length($line[$i]) > $width[$i] ) {
         $width[$i] = length($line[$i]);
       }
-      if ( $line[$i] =~ /^"(.*)"$/ ) {
-        $content[$l-1][$i] = $1;
-      }
-      else {
-        $content[$l-1][$i] = $line[$i];
-      }
+      $content[$l-1][$i] = $line[$i];
     }
   }
   ++$l;
@@ -91,10 +89,10 @@ for my $i (0..$#header) {
   if ($DEBUG) {print "$header[$i]:$width[$i] ";}
   if ( $header[$i] =~ /acct_no/i ) {
     if ($DEBUG) {print " in special header\n";}
-    $worksheet->set_column($i,$i,int($width[$i]*1.2),$strfmt);
+    $worksheet->set_column($i,$i,int($width[$i]*1.1),$strfmt);
   }
   else {
-    $worksheet->set_column($i,$i,int($width[$i]*1.2));
+    $worksheet->set_column($i,$i,int(($width[$i]+1)*1.2));
   }
   $worksheet->write_string(0,$i,$header[$i]);
 }
