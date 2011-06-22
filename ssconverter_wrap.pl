@@ -22,5 +22,5 @@ system("ssh faxserver /usr/local/bin/ssconverter.pl $WORKDIR_REMOTE/$SFROM $WORK
 system("cp $WORKDIR_LOCAL/$STO $FULL_TO");
 
 # clean up the temp files on the share
-system("rm $WORKDIR_LOCAL/$SFROM");
-system("rm $WORKDIR_LOCAL/$STO");
+system("rm -f $WORKDIR_LOCAL/$SFROM");
+system("rm -f $WORKDIR_LOCAL/$STO");
