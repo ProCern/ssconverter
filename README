@@ -5,13 +5,19 @@ Installation
 -------------------------------------------------------------------------
 1.  perl -MCPAN -e shell
     cpan> install Spreadsheet::WriteExcel
-    cpan> install Excel::Writer::XLSX
 2.  git clone git@github.com/absperf/ssconverter
 3.  cd ssconverter
-4.  cp ssconverter.pl /usr/local/bin
-5.  put it in cron
-    * * * * * /usr/local/bin/ssconverter.pl /dir_to_watch /dir_to_write
+4.  cp ssconverter* /usr/local/bin
+
+ALT for AIX with no internet access - ie. perl -MCPAN will not work
+1a.  Download OLE-Storage_Lite-0.19.tar.gz, Parse-RecDescent-1.965001.tar.gz, and Spreadsheet-WriteExcel-2.37.tar.gz
+1b.  gzip -dc <file> | tar -xf -
+1c.  in each dir from download do:  perl Makefile.PL; make; make test; sudo make install
 
 -------------------------------------------------------------------------
 Usage
 -------------------------------------------------------------------------
+
+/usr/local/bin/ssconverter.pl sourcefile destfile
+
+/usr/local/bin/ssconverter_wrap.pl sourcefile destfile
